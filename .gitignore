@@ -1,1 +1,8 @@
 /acache.ipynb
+/.cache/
+/.output/
+/.strategy_results/
+/.study/
+/.venv/
+/datatest/
+/logs/
