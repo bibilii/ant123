@@ -4,5 +4,6 @@
 /.strategy_results/
 /.study/
 /.venv/
+/.idea/
 /datatest/
 /logs/
