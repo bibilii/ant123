@@ -19,8 +19,8 @@ Enter file in which to save the key (C:\Users\h1109/.ssh/id_ed25519):
 shh :密码  顺6,为了方便不用就行
 
 
-3 下面是
-#
+# 下面是是运行程序的内容
+
 (.venv) PS D:\trading\ant> ssh-keygen
 Generating public/private ed25519 key pair.
 Enter file in which to save the key (C:\Users\h1109/.ssh/id_ed25519):
