@@ -1,0 +1,34 @@
+# 虚拟环境使用3.10.10
+#  pip install -r .\requirements.txt
+# 数据处理和分析库
+pandas
+numpy
+# 数据可视化库
+matplotlib
+# 进度条库
+tqdm
+# 金融数据可视化库
+mplfinance
+# 只能手动安装TA-Lib  # 技术分析库
+seaborn
+
+# 下面是不常用的
+# Yahoo Finance数据获取库
+yfinance
+# Tushare数据获取库
+tushare
+# Pandas技术分析扩展库
+pandas_ta
+# 聚宽数据接口库
+jqdatasdk  # pip install -U jqdatasdk  #  JQData预计每2周会发布一次迭代版本
+
+# 学习网站
+# https://github.com/wisherg/python_data_course
+
+# 系统输入以下代码，下载数据很快
+# 直接输入代码，直接在系统管理员下
+# PS C:\Users\h1109> pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+# Writing to C:\Users\h1109\AppData\Roaming\pip\pip.ini
+# 会自动生成一个文件夹，pip.ini
+# [global]
+# index-url = https://pypi.tuna.tsinghua.edu.cn/simple
