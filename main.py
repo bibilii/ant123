@@ -47,14 +47,17 @@ class StrategyRunner:
         self.sell_ratio = sell_ratio
         
         # 创建输出目录
-        self.output_dir = 'strategy_results'
+        self.output_dir = '.strategy_results'
+        self.main_output_dir = os.path.join(self.output_dir, 'main')
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
+        if not os.path.exists(self.main_output_dir):
+            os.makedirs(self.main_output_dir)
             
         # 初始化各个组件
         self.data_reader = StockDataReader()
         self.plotter = StrategyPlotter()
-        self.statistics = StrategyStatistics()
+        self.statistics = StrategyStatistics(output_file=os.path.join(self.output_dir, 'strategy_statistics.csv'))
         
     def run_strategy(self, strategy_name: str):
         """
@@ -105,11 +108,11 @@ class StrategyRunner:
         
         # 5. 保存交易记录
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        trade_records_file = f"{self.output_dir}/{self.symbol}_{strategy_name}_{timestamp}_trades.csv"
+        trade_records_file = os.path.join(self.main_output_dir, f"{self.symbol}_{strategy_name}_{timestamp}_trades.csv")
         trade_records.to_csv(trade_records_file, index=False, encoding='utf-8-sig')
         
         # 6. 绘制策略结果图表
-        plot_file = f"{self.output_dir}/{self.symbol}_{strategy_name}_{timestamp}_plot.png"
+        plot_file = os.path.join(self.main_output_dir, f"{self.symbol}_{strategy_name}_{timestamp}_plot.png")
         self.plotter.plot_strategy_result(trade_records, self.symbol, plot_file)
         
         # 7. 计算并保存统计结果
