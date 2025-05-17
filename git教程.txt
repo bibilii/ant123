@@ -8,6 +8,9 @@ ssh-keygen   # 在本地新建用户文件夹，新建两个文夹  C:\Users\h11
 ssh -T git@github.com   # 测试SSH钥匙是否配好，
 
 
+git config --global user.name "你的用户名"
+git config --global user.email "你的邮箱地址"
+
 
 # 注意事项，记住我的设置好用户名，
 
