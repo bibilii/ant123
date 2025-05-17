@@ -70,7 +70,7 @@ class StrategyStatistics:
         
         # 计算交易天数
         trading_days = len(df)
-        print(symbol)
+
         # 构建统计结果
         stats = {
             '策略名称': strategy_name,
