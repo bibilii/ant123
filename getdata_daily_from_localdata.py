@@ -51,7 +51,7 @@ class StockDataReader:
             # efinance: 000001.csv
             file_name = f"{stock_code}.csv"
         file_path = os.path.join(self.csv_file_path, file_name)
-        print(file_path)
+        # print(file_path)
         return pd.read_csv(file_path)
 
     def get_standard_data(self, stock_code: str, start_date: str = None, end_date: str = None) -> pd.DataFrame:
