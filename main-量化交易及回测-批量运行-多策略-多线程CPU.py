@@ -55,27 +55,27 @@ DATA_SOURCE_TYPE = ''  # 'efinance' 或 'tushare'
 INPUT_FOLDER = ''  # 数据文件夹路径
 
 # 输出配置
-OUTPUT_FOLDER = '.strategy_results/多线程-画图-多策略-多线程CPU'
+OUTPUT_FOLDER = '.strategy_results/多线程-画图-多策略-多线程CPU-12490f'
 
 # 选定的股票代码
 SELECTED_STOCK_CODES = [
-    # '002239',  # 奥特佳
-    # '002160',  # 常铝股份
-    # '600053',  # 九鼎投资
-    # '002135',  # 东南网架
-    # '000520',  # 凤凰航运
-    #
-    # '000001',  # 平安银行
-    # '002594',  # 比亚迪
-    # '002574',  # 明牌珠宝
-    # '601727',  # 上海电气
-    # '601877',  # 正泰电气
-    # '600900',  # 长江电力
-    # '600481',  # 双良节能
-    # '300750',  # 宁德时代
-    # '603843',  # 正平股份
-    # '600191',  # 华资实业
-    # '601166',  # 兴业银行
+    '002239',  # 奥特佳
+    '002160',  # 常铝股份
+    '600053',  # 九鼎投资
+    '002135',  # 东南网架
+    '000520',  # 凤凰航运
+
+    '000001',  # 平安银行
+    '002594',  # 比亚迪
+    '002574',  # 明牌珠宝
+    '601727',  # 上海电气
+    '601877',  # 正泰电气
+    '600900',  # 长江电力
+    '600481',  # 双良节能
+    '300750',  # 宁德时代
+    '603843',  # 正平股份
+    '600191',  # 华资实业
+    '601166',  # 兴业银行
 ]
 
 # 定义所有策略
@@ -286,7 +286,7 @@ def main():
                 SELECTED_STOCK_CODES = [os.path.basename(f).split('.')[0] + '.' + os.path.basename(f).split('.')[1] for f in csv_files]
         
         if not SELECTED_STOCK_CODES:
-            logger.error("没有找到任何股票数据")
+            logger.error("\n没有找到任何股票数据")
             return
         
         # 准备参数列表
@@ -294,12 +294,12 @@ def main():
             lock = manager.Lock()
             args_list = [(symbol, OUTPUT_FOLDER, START_DATE, END_DATE, lock) for symbol in SELECTED_STOCK_CODES]
             num_processes = min(cpu_count(), len(SELECTED_STOCK_CODES))
-            logger.info(f"使用 {num_processes} 个进程进行处理")
+            logger.info(f"\n使用 {num_processes} 个进程进行处理")
             with Pool(processes=num_processes) as pool:
                 results = list(tqdm(
                     pool.imap_unordered(process_single_stock, args_list),
                     total=len(SELECTED_STOCK_CODES),
-                    desc="处理股票"
+                    desc="\n处理股票"
                 ))
             success_count = sum(1 for r in results if r)
             logger.info(f"\n处理完成！成功处理 {success_count}/{len(SELECTED_STOCK_CODES)} 只股票")
