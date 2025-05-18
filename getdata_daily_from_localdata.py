@@ -13,8 +13,8 @@ class StockDataReader:
     通用股票数据读取类，支持多种数据格式和数据源
     """
     DEFAULT_PATHS = {
-        # 'efinance': r"\\DX4600-A923\personal_folder\99-data\downtask\taskweek\01-日线数据-efinance爬虫",
-        'efinance': r"\\DH2600-866D\personal_folder\99-data\downtask\taskweek\01-日线数据-efinance爬虫",    # 回家的地址
+        'efinance': r"\\DX4600-A923\personal_folder\99-data\downtask\taskweek\01-日线数据-efinance爬虫",
+        # 'efinance': r"\\DH2600-866D\personal_folder\99-data\downtask\taskweek\01-日线数据-efinance爬虫",    # 回家的地址
         'tushare': r"D:\trading\dog\getdata_tushare_output\0102_股票数据_行情数据_历史日线\qfq",
         'akshare': r"..\data\akshare"
     }
