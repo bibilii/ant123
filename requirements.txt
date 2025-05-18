@@ -15,3 +15,6 @@ yfinance
 tushare
 pandas_ta
 jqdatasdk
+
+
+#             pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128

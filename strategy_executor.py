@@ -53,60 +53,69 @@ class TradeExecutor:
             if i == 0 and df.iloc[i]['信号'] == 1:
                 # 首次买入
                 price = df.iloc[i]['收盘']
+                if price == 0 or np.isnan(price):
+                    continue
                 amount = current_cash * self.buy_ratio
                 shares = int(amount / price / 100) * 100  # 取整百
-                if shares > 0:
-                    commission = shares * price * self.commission_rate
-                    stamp_duty = shares * price * self.stamp_duty_rate
-                    total_cost = shares * price + commission + stamp_duty
-                    
-                    if total_cost <= current_cash:
-                        df.iloc[i, df.columns.get_loc('业务名称')] = '买入'
-                        df.iloc[i, df.columns.get_loc('成交数量')] = shares
-                        df.iloc[i, df.columns.get_loc('成交均价')] = price
-                        df.iloc[i, df.columns.get_loc('印花税')] = stamp_duty
-                        df.iloc[i, df.columns.get_loc('佣金')] = commission
-                        
-                        current_shares += shares
-                        current_cash -= total_cost
-                        
-            elif df.iloc[i]['信号'] == 1:
-                # 非首次买入
-                price = df.iloc[i]['收盘']
-                amount = current_cash * self.buy_ratio
-                shares = int(amount / price / 100) * 100
-                if shares > 0:
-                    commission = shares * price * self.commission_rate
-                    stamp_duty = shares * price * self.stamp_duty_rate
-                    total_cost = shares * price + commission + stamp_duty
-                    
-                    if total_cost <= current_cash:
-                        df.iloc[i, df.columns.get_loc('业务名称')] = '买入'
-                        df.iloc[i, df.columns.get_loc('成交数量')] = shares
-                        df.iloc[i, df.columns.get_loc('成交均价')] = price
-                        df.iloc[i, df.columns.get_loc('印花税')] = stamp_duty
-                        df.iloc[i, df.columns.get_loc('佣金')] = commission
-                        
-                        current_shares += shares
-                        current_cash -= total_cost
-                        
-            elif df.iloc[i]['信号'] == -1 and current_shares > 0:
-                # 卖出
-                price = df.iloc[i]['收盘']
-                shares = int(current_shares * self.sell_ratio / 100) * 100  # 卖出指定比例的持股，取整百
-                if shares > 0:
-                    commission = shares * price * self.commission_rate
-                    stamp_duty = shares * price * self.stamp_duty_rate
-                    total_revenue = shares * price - commission - stamp_duty
-                    
-                    df.iloc[i, df.columns.get_loc('业务名称')] = '卖出'
-                    df.iloc[i, df.columns.get_loc('成交数量')] = -shares
+                if shares <= 0:
+                    continue
+                commission = shares * price * self.commission_rate
+                stamp_duty = shares * price * self.stamp_duty_rate
+                total_cost = shares * price + commission + stamp_duty
+                
+                if total_cost <= current_cash:
+                    df.iloc[i, df.columns.get_loc('业务名称')] = '买入'
+                    df.iloc[i, df.columns.get_loc('成交数量')] = shares
                     df.iloc[i, df.columns.get_loc('成交均价')] = price
                     df.iloc[i, df.columns.get_loc('印花税')] = stamp_duty
                     df.iloc[i, df.columns.get_loc('佣金')] = commission
                     
-                    current_shares -= shares
-                    current_cash += total_revenue
+                    current_shares += shares
+                    current_cash -= total_cost
+                    
+            elif df.iloc[i]['信号'] == 1:
+                # 非首次买入
+                price = df.iloc[i]['收盘']
+                if price == 0 or np.isnan(price):
+                    continue
+                amount = current_cash * self.buy_ratio
+                shares = int(amount / price / 100) * 100
+                if shares <= 0:
+                    continue
+                commission = shares * price * self.commission_rate
+                stamp_duty = shares * price * self.stamp_duty_rate
+                total_cost = shares * price + commission + stamp_duty
+                
+                if total_cost <= current_cash:
+                    df.iloc[i, df.columns.get_loc('业务名称')] = '买入'
+                    df.iloc[i, df.columns.get_loc('成交数量')] = shares
+                    df.iloc[i, df.columns.get_loc('成交均价')] = price
+                    df.iloc[i, df.columns.get_loc('印花税')] = stamp_duty
+                    df.iloc[i, df.columns.get_loc('佣金')] = commission
+                    
+                    current_shares += shares
+                    current_cash -= total_cost
+                    
+            elif df.iloc[i]['信号'] == -1 and current_shares > 0:
+                # 卖出
+                price = df.iloc[i]['收盘']
+                if price == 0 or np.isnan(price):
+                    continue
+                shares = int(current_shares * self.sell_ratio / 100) * 100  # 卖出指定比例的持股，取整百
+                if shares <= 0:
+                    continue
+                commission = shares * price * self.commission_rate
+                stamp_duty = shares * price * self.stamp_duty_rate
+                total_revenue = shares * price - commission - stamp_duty
+                
+                df.iloc[i, df.columns.get_loc('业务名称')] = '卖出'
+                df.iloc[i, df.columns.get_loc('成交数量')] = -shares
+                df.iloc[i, df.columns.get_loc('成交均价')] = price
+                df.iloc[i, df.columns.get_loc('印花税')] = stamp_duty
+                df.iloc[i, df.columns.get_loc('佣金')] = commission
+                
+                current_shares -= shares
+                current_cash += total_revenue
             
             # 更新当前状态
             df.iloc[i, df.columns.get_loc('持股数量')] = current_shares
