@@ -49,7 +49,7 @@ class StrategyRunner:
 
         # 创建输出目录
         self.output_dir = '.strategy_results'
-        self.main_output_dir = os.path.join(self.output_dir, 'main')
+        self.main_output_dir = os.path.join(self.output_dir, 'main_单个股票_单线程')
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
         if not os.path.exists(self.main_output_dir):
@@ -58,7 +58,7 @@ class StrategyRunner:
         # 初始化各个组件
         self.data_reader = StockDataReader()
         self.plotter = StrategyPlotter()
-        self.statistics = StrategyStatistics(output_file=os.path.join(self.output_dir, 'strategy_statistics.csv'))
+        self.statistics = StrategyStatistics(output_file=os.path.join(self.output_dir, 'strategy_statistics_main_单个股票_单线程.csv'))
 
     def run_strategy(self, strategy_name: str):
         """

@@ -10,6 +10,8 @@ from tqdm import tqdm
 import pandas as pd
 import logging
 from datetime import datetime
+from logging.handlers import RotatingFileHandler
+import multiprocessing
 from strategy import (
     MovingAverageStrategy, 
     AnnualMAStrategy, 
@@ -23,6 +25,7 @@ from strategy_statistics import StrategyStatistics
 from strategy_plotter import StrategyPlotter
 from strategy_executor import TradeExecutor
 from getdata_daily_from_localdata import StockDataReader
+from stock_info_processor import StockInfoProcessor
 
 # 配置日志
 def setup_logging():
@@ -31,23 +34,39 @@ def setup_logging():
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
         
-    log_file = os.path.join(log_dir, f'strategy_run_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log')
+    log_file = os.path.join(log_dir, f'strategy_run_{datetime.now().strftime("%Y%m%d")}.log')
     
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.FileHandler(log_file, encoding='utf-8'),
-            logging.StreamHandler(sys.stdout)
-        ]
-    )
-    return logging.getLogger(__name__)
+    # 创建格式化器
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    
+    # 配置文件处理器
+    file_handler = logging.FileHandler(log_file, encoding='utf-8')
+    file_handler.setFormatter(formatter)
+    
+    # 配置控制台处理器
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setFormatter(formatter)
+    
+    # 获取根日志记录器
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    
+    # 清除现有处理器
+    if logger.handlers:
+        logger.handlers.clear()
+    
+    # 添加处理器
+    logger.addHandler(file_handler)
+    logger.addHandler(console_handler)
+    
+    return logger
 
+# 初始化日志记录器
 logger = setup_logging()
 
 # 配置参数
 START_DATE = "2014-01-01"  # 需要更长的历史数据来计算年均线
-END_DATE = "2025-05-01"
+END_DATE = "2025-05-16"
 INITIAL_CASH = 100000.0  # 初始资金10万
 
 # 数据源配置，如果为空则使用StockDataReader中的默认值
@@ -55,7 +74,7 @@ DATA_SOURCE_TYPE = ''  # 'efinance' 或 'tushare'
 INPUT_FOLDER = ''  # 数据文件夹路径
 
 # 输出配置
-OUTPUT_FOLDER = '.strategy_results/多线程-画图-多策略-多线程CPU-12490f'
+OUTPUT_FOLDER = '.strategy_results/多线程-画图-多策略-多线程CPU-AMD5600X'
 
 # 选定的股票代码
 SELECTED_STOCK_CODES = [
@@ -151,14 +170,28 @@ def process_single_stock(args):
     symbol, output_folder, start_date, end_date, lock = args
     
     try:
-        # 创建数据读取器，如果DATA_SOURCE_TYPE为空则使用默认值
+        # 创建数据读取器
         reader = StockDataReader(
             data_type=DATA_SOURCE_TYPE if DATA_SOURCE_TYPE else None,
             parent_dir=INPUT_FOLDER if INPUT_FOLDER else None
         )
         
+        # 获取股票名称
+        stock_processor = StockInfoProcessor()
+        try:
+            stock_info = stock_processor.get_stock_info(symbol)
+            stock_name = stock_info['name']
+            safe_stock_name = stock_processor.sanitize_filename(stock_name)  # 处理文件名
+        except:
+            stock_name = "未知"
+            safe_stock_name = "unknown"
+        
         # 获取数据
         df = reader.get_standard_data(symbol, start_date, end_date)
+        
+        # 添加股票代码和名称列
+        df['股票代码'] = symbol
+        df['股票名称'] = stock_name
         
         # 重命名列以匹配策略需求
         df = df.rename(columns={
@@ -216,17 +249,17 @@ def process_single_stock(args):
                 executor = TradeExecutor(
                     strategy_name=strategy_name,
                     initial_cash=INITIAL_CASH,
-                    buy_ratio=0.2,  # 买入比例20%
-                    sell_ratio=0.3  # 卖出比例30%
+                    buy_ratio=0.2,
+                    sell_ratio=0.3
                 )
                 trade_records = executor.execute_trades(df_with_signals)
                 
                 # 保存结果
-                output_file = os.path.join(strategy_folder, f"{symbol}_result.csv")
+                output_file = os.path.join(strategy_folder, f"{symbol}_{safe_stock_name}_result.csv")
                 trade_records.to_csv(output_file, index=False, encoding='utf-8-sig')
                 
                 # 生成图表
-                output_plot = os.path.join(strategy_folder, f"{symbol}_plot.png")
+                output_plot = os.path.join(strategy_folder, f"{symbol}_{safe_stock_name}_plot.png")
                 plotter.plot_strategy_result(trade_records, symbol, output_plot)
                 
                 # 计算并保存统计结果
@@ -234,20 +267,20 @@ def process_single_stock(args):
                 statistics = stats.calculate_statistics(
                     df=trade_records,
                     strategy_name=strategy_name,
-                    symbol=symbol,
+                    symbol=f"{symbol}_{safe_stock_name}",  # 在统计结果中使用安全的文件名
                     start_date=start_date,
                     end_date=end_date,
                     initial_cash=INITIAL_CASH
                 )
                 stats.save_statistics(statistics, lock=lock)
                 
-                logger.info(f"成功处理股票 {symbol} 的 {strategy_name} 策略")
+                logger.info(f"成功处理股票 {symbol}_{stock_name} 的 {strategy_name} 策略")
                 
             except Exception as e:
-                logger.error(f"处理股票 {symbol} 的 {strategy_name} 策略时出错: {str(e)}")
+                logger.error(f"处理股票 {symbol}_{stock_name} 的 {strategy_name} 策略时出错: {str(e)}")
                 logger.error(traceback.format_exc())
-                save_error_statistics(symbol, output_folder, start_date, end_date, f"{strategy_name} 策略执行失败: {str(e)}", lock=lock)
-                continue  # 继续处理下一个策略
+                save_error_statistics(f"{symbol}_{safe_stock_name}", output_folder, start_date, end_date, f"{strategy_name} 策略执行失败: {str(e)}", lock=lock)
+                continue
         
         return True
     except Exception as e:

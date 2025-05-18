@@ -1,4 +1,4 @@
-      #!/usr/bin/env python
+#!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 # @Author   : huyifei   @Time : 2025/04/18 23:35:55
 
@@ -7,6 +7,7 @@ import numpy as np
 from typing import Optional
 from datetime import datetime
 import os
+from stock_info_processor import StockInfoProcessor
 
 class TradeExecutor:
     """交易执行器类"""
@@ -27,6 +28,7 @@ class TradeExecutor:
         self.sell_ratio = sell_ratio
         self.commission_rate = 0.000095  # 佣金率
         self.stamp_duty_rate = 0.001   # 印花税率
+        self.stock_processor = StockInfoProcessor()  # 创建股票信息处理器实例
         
     def execute_trades(self, df: pd.DataFrame) -> pd.DataFrame:
         """
@@ -125,7 +127,22 @@ class TradeExecutor:
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
             
+        # 从DataFrame中获取股票代码（假设是第一行的数据）
+        symbol = df.iloc[0]['股票代码'] if '股票代码' in df.columns else None
+        
+        try:
+            # 获取股票名称
+            if symbol:
+                stock_info = self.stock_processor.get_stock_info(symbol)
+                stock_name = stock_info['name']
+                safe_stock_name = self.stock_processor.sanitize_filename(stock_name)
+                name_suffix = f"_{safe_stock_name}"
+            else:
+                name_suffix = ""
+        except:
+            name_suffix = ""
+            
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        filename = f"{output_dir}/{self.strategy_name}_{timestamp}.csv"
+        filename = f"{output_dir}/{self.strategy_name}_{symbol}{name_suffix}_{timestamp}.csv"
         df.to_csv(filename, index=False, encoding='utf-8-sig')
         print(f"交易记录已保存到: {filename}") 

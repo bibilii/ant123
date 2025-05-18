@@ -25,7 +25,7 @@ class StrategyStatistics:
         """初始化统计文件，如果文件不存在则创建"""
         if not os.path.exists(self.output_file):
             columns = [
-                '策略名称', '股票代码', '开始日期', '结束日期', '交易天数',
+                '策略名称', '股票代码', '股票名称', '开始日期', '结束日期', '交易天数',
                 '初始资产', '最终总资产', '最终股票市值', '持有现金',
                 '持有股票数量', '信号次数', '买入次数', '卖出次数',
                 '累计佣金', '累计印花税', '总收益率', '股票涨幅', '备注'
@@ -71,10 +71,25 @@ class StrategyStatistics:
         # 计算交易天数
         trading_days = len(df)
 
+        # 分离股票代码和名称，恢复原始名称中的特殊字符
+        if '_' in str(symbol):
+            code, name = str(symbol).split('_', 1)
+            # 恢复特殊字符
+            if name.startswith('ST') and not name.startswith('*ST'):
+                name = '*' + name
+        else:
+            code = str(symbol)
+            name = ''
+
+        # 从DataFrame获取原始股票名称（如果可用）
+        if '股票名称' in df.columns and not df['股票名称'].empty:
+            name = df['股票名称'].iloc[0]
+
         # 构建统计结果
         stats = {
             '策略名称': strategy_name,
-            '股票代码': str(symbol),  # 确保股票代码为字符串
+            '股票代码': code,
+            '股票名称': name,  # 使用原始股票名称
             '开始日期': start_date,
             '结束日期': end_date,
             '交易天数': trading_days,
@@ -103,7 +118,7 @@ class StrategyStatistics:
             lock (Lock): 多进程/多线程锁
         """
         columns = [
-            '策略名称', '股票代码', '开始日期', '结束日期', '交易天数',
+            '策略名称', '股票代码', '股票名称', '开始日期', '结束日期', '交易天数',
             '初始资产', '最终总资产', '最终股票市值', '持有现金',
             '持有股票数量', '信号次数', '买入次数', '卖出次数',
             '累计佣金', '累计印花税', '总收益率', '股票涨幅', '备注'
@@ -115,6 +130,12 @@ class StrategyStatistics:
             if os.path.exists(self.output_file):
                 try:
                     existing_df = pd.read_csv(self.output_file, encoding='utf-8-sig')
+                    # 如果是旧格式的数据（股票代码和名称在一起），则进行拆分
+                    if '股票名称' not in existing_df.columns and '股票代码' in existing_df.columns:
+                        # 拆分股票代码列
+                        split_result = existing_df['股票代码'].str.split('_', n=1, expand=True)
+                        existing_df['股票代码'] = split_result[0]
+                        existing_df['股票名称'] = split_result[1].apply(lambda x: '*' + x if x.startswith('ST') and not x.startswith('*ST') else x)
                 except pd.errors.EmptyDataError:
                     existing_df = pd.DataFrame(columns=columns)
             else:
@@ -133,17 +154,15 @@ class StrategyStatistics:
             for col in percent_columns:
                 if col in new_df:
                     new_df[col] = pd.to_numeric(new_df[col], errors='coerce').round(2)
-            if '股票代码' in new_df:
-                new_df['股票代码'] = new_df['股票代码'].astype(str)
-
-            # 合并数据
-            result_df = pd.concat([existing_df, new_df], ignore_index=True)
 
             # 股票代码：数字补零，英文不变
             def format_stock_code(code):
                 code_str = str(code)
                 return code_str.zfill(6) if code_str.isdigit() else code_str
-            result_df['股票代码'] = result_df['股票代码'].apply(format_stock_code)
+            new_df['股票代码'] = new_df['股票代码'].apply(format_stock_code)
+
+            # 合并数据
+            result_df = pd.concat([existing_df, new_df], ignore_index=True)
 
             # 保存结果，始终用columns顺序
             result_df.to_csv(self.output_file, index=False, encoding='utf-8-sig', columns=columns)

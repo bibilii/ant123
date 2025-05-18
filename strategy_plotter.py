@@ -1,9 +1,10 @@
- # !/usr/bin/env python
+#!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 # @Author   : huyifei   @Time : 2025/04/18 23:35:55
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import matplotlib.dates as mdates
+from stock_info_processor import StockInfoProcessor
 
 class StrategyPlotter:
     def __init__(self):
@@ -11,6 +12,7 @@ class StrategyPlotter:
         plt.rcParams['font.sans-serif'] = ['SimHei']  # 用来正常显示中文标签
         plt.rcParams['axes.unicode_minus'] = False  # 用来正常显示负号
         self.check_chinese_font()
+        self.stock_processor = StockInfoProcessor()  # 创建股票信息处理器实例
 
     def check_chinese_font(self):
         """检查中文字体是否可用"""
@@ -35,6 +37,14 @@ class StrategyPlotter:
             symbol (str): 股票代码
             output_file (str): 输出文件路径
         """
+        try:
+            # 获取股票名称
+            stock_info = self.stock_processor.get_stock_info(symbol)
+            stock_name = stock_info['name']
+            title_text = f'{symbol} {stock_name}'
+        except:
+            title_text = symbol
+
         # 创建两个子图
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(15, 12))
         # 绘制收盘价和年均线
@@ -48,7 +58,7 @@ class StrategyPlotter:
             ax1.scatter(buy_points['日期'], buy_points['收盘'], marker='^', color='red', s=100, label='买入信号')
         if not sell_points.empty:
             ax1.scatter(sell_points['日期'], sell_points['收盘'], marker='v', color='green', s=100, label='卖出信号')
-        ax1.set_title(f'{symbol} 股票价格和年均线')
+        ax1.set_title(f'{title_text} 股票价格和年均线')
         ax1.legend()
         ax1.grid(True)
         # 计算股票市值
@@ -59,7 +69,7 @@ class StrategyPlotter:
         ax2.plot(df['日期'], df['总金额'], label='总资产', color='blue', linewidth=2)
         # 在股票市值和总资产之间填充红色区域
         ax2.fill_between(df['日期'], df['股票市值'], df['总金额'], color='red', alpha=0.3, label='现金余额区域')
-        ax2.set_title(f'{symbol} 资产分布')
+        ax2.set_title(f'{title_text} 资产分布')
         ax2.legend()
         ax2.grid(True)
         # 设置y轴格式为货币格式（不再用¥，避免字体警告）

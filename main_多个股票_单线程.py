@@ -49,7 +49,7 @@ class BatchStrategyRunner:
 
         # 创建输出目录
         self.output_dir = '.strategy_results'
-        self.batch_output_dir = os.path.join(self.output_dir, 'batch')
+        self.batch_output_dir = os.path.join(self.output_dir, 'main_多个股票_单线程')
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
         if not os.path.exists(self.batch_output_dir):
@@ -58,7 +58,7 @@ class BatchStrategyRunner:
         # 初始化各个组件
         self.data_reader = StockDataReader()
         self.plotter = StrategyPlotter()
-        self.statistics = StrategyStatistics(output_file=os.path.join(self.output_dir, 'batch_strategy_statistics.csv'))
+        self.statistics = StrategyStatistics(output_file=os.path.join(self.output_dir, 'strategy_statistics_main_多个股票_单线程.csv'))
 
     def get_stock_codes(self):
         """获取文件夹中所有CSV文件的股票代码"""

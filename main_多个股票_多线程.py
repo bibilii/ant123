@@ -72,7 +72,7 @@ class BatchStrategyRunner:
 
         # 创建输出目录
         self.output_dir = '.strategy_results'
-        self.batch_output_dir = os.path.join(self.output_dir, 'batch_gpu')
+        self.batch_output_dir = os.path.join(self.output_dir, 'main_多个股票_多线程')
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
         if not os.path.exists(self.batch_output_dir):
@@ -85,7 +85,7 @@ class BatchStrategyRunner:
         self.data_reader = StockDataReader()
         self.plotter = StrategyPlotter()
         self.statistics = StrategyStatistics(
-            output_file=os.path.join(self.output_dir, 'batch_gpu_strategy_statistics.csv'))
+            output_file=os.path.join(self.output_dir, 'strategy_statistics_main_多个股票_多线程.csv'))
 
         # 创建线程锁
         self.stats_lock = threading.Lock()
